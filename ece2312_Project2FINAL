@@ -171,7 +171,7 @@ R = combinedWave*scale; %%attenated by -6 db, right speaker
 sound (L, Fs)
 sound (R, Fs)
 
-filename = './ece2312-filteredspeechsine.wav';
+filename = './ece2312-stereospeechsine.wav';
 audiowrite(filename,cetkSineWave,Fs);
 
 %Spectrograms of audio channels
