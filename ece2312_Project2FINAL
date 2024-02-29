@@ -1,0 +1,181 @@
+info = audiodevinfo
+nDevices = audiodevinfo(1)
+% name = audiodevinfo(1,-1)
+DriverVersion = audiodevinfo(1,0,"DriverVersion")
+support = audiodevinfo(1,2,44100,16,1)
+%devID = audiodevinfo(1,"devName")
+suppDevID = audiodevinfo(1,44100,16,1)
+
+%record audio and plot
+Fs = 44100; 
+nBits = 8; 
+nChannels = 1; 
+ID = -1;       % default audio input device 
+Ts = 1/Fs;
+recObj = audiorecorder(Fs,nBits,nChannels,ID);
+
+disp("Begin speaking.") 
+
+recDuration = 5; % record for 5 seconds
+recordblocking(recObj,recDuration);
+
+disp("End of recording.")
+y = getaudiodata(recObj);
+
+%Graph from Project 1
+plot(0:1/Fs:recDuration-1/Fs, y);
+title('Audio Signal');
+xlabel('Time (seconds)');
+ylabel('Signal Amplitude');
+
+%sin wave function of original audio
+signalFrequency = 5000; % Hz
+%t = linspace(0, 5, 256); % seconds
+t = 0:Ts:5;
+sinWave = sin(2*pi*signalFrequency*t);
+
+%Play sound at Fs
+sound(sinWave,Fs)
+
+%create .wav file for sine wave of original audio
+filename = './ece2312_sinetone.wav';
+audiowrite(filename,sinWave,Fs);
+
+% of spectrogram .wav file for sine wave of original audio
+stft(sinWave,Fs,Window = kaiser(256,5),OverlapLength=220, FFTLength =512);
+ylim([0 10]) %can play around with limits to highlight speech section
+
+% % sine wave of chirp at varied frequencies
+% 
+% t = 0:Ts:5;
+% fstart = 0;
+% fend = 8000;
+% chirpFrequency = linspace(fstart, fend, length(t))
+% 
+%  %from 0Hz-8000Hz
+% a = sin(2*pi*chirpFrequency.*t)
+% 
+% %Play sound at Fs
+% sound(a,Fs)
+% 
+% %create  .wav file for sine wave of chirp
+% filename = './ece2312-chirp.wav';
+% audiowrite(filename,a,Fs);
+% 
+% %plot .wav file for sine wave of chirp
+% stft(a,Fs,Window = kaiser(256,5),OverlapLength=220, FFTLength =512);
+% ylim([-25 25]) %can play around with limits to highlight speech section
+
+%CETK 5 sine tones
+
+% Start with the tone. (Pinkish-red) - D
+% Up a full tone. (Orange) - E
+% Down a major third. (Purple) - C 
+% Down an octave. (Yellow) - C (an octave lower)
+% Up a perfect fifth. (White) - G
+% Using websites
+    %https://www.liutaiomottola.com/formulae/freqtab.htm 
+    %https://musictales.club/article/five-tones-spielbergs-alien-language
+    %https://www.youtube.com/watch?v=kpsEqINeMS4
+
+t = linspace(0, 5); % seconds
+
+%Within 0Hz - 8000Hz range    
+% Tone frequency, in Hertz. must be less than .5 * Fs.
+ftone1 = 932.328; % Hz Bb
+ftone2 = 1046.502;  % Hz  C
+ftone3 = 830.609;  % Hz  Ab
+ftone4 = 415.305;  % Hz  Ab octave lower 
+ftone5 = 622.254;  % Hz  Eb
+
+%we chose these times below as an approximation of the times
+%represented in the video
+timeDuration1 = .3
+timeDuration2 = .5
+timeDuration3 = 1
+timeDuration4 = 1.5
+
+a = sin(linspace(0, timeDuration1*ftone1*2*pi, round(timeDuration1*Fs)));
+b = sin(linspace(0, timeDuration2*ftone2*2*pi, round(timeDuration2*Fs)));
+c = sin(linspace(0, timeDuration3*ftone3*2*pi, round(timeDuration3*Fs)));
+d = sin(linspace(0, timeDuration2*ftone4*2*pi, round(timeDuration2*Fs)));
+e = sin(linspace(0, timeDuration4*ftone5*2*pi, round(timeDuration4*Fs)));
+
+% 
+% sound(a, Fs);       % Play sound at sampling rate Fs
+% pause(.5)
+% % sound(halfSecSilence, Fs);
+% sound(b, Fs);
+% pause (.5)
+% sound(c, Fs);
+% pause (1)
+% sound(d, Fs);         %maria we need to make this into one
+% pause (.45)
+% sound(e, Fs);
+
+cetkSineWave = [a,b,c,d,e]
+sound(cetkSineWave, Fs)
+
+%create  .wav file for sine wave of cetk
+filename = './ece2312-cetk.wav';
+audiowrite(filename,cetkSineWave,Fs);
+
+% % %plot .wav file for sine wave of cetk
+ stft(b,Fs,Window = kaiser(256,5),OverlapLength=220, FFTLength =512);
+ %[s f t] = spectrogram()
+ ylim([0 10]) %can play around with limits to highlight speech section
+
+% %Combining Sound files
+
+signalFrequency = 5000; % Hz
+%t = 0:Ts:3; % seconds
+t = linspace(0, 3, 132300); % seconds
+
+[oldWav, Fs] = audioread("ece2312_dog.wav")
+oldWav = oldWav.'
+sinWave = sin(2*pi*signalFrequency*t)
+combinedWave = sinWave + oldWav
+
+sound (combinedWave, Fs)
+% sound (sinWave, Fs)
+
+%create  .wav file for combined sound waves
+filename = './ece2312-speechchirp.wav';
+audiowrite(filename,combinedWave,Fs);
+
+%plot .wav file for combined sound waves
+stft(combinedWave,Fs,Window = kaiser(256,5),OverlapLength=220, FFTLength =512);
+ylim([0 10]) %can play around with limits to highlight speech section
+
+%Designing a lowpass
+
+filter = lowpass(combinedWave, 4000, Fs, ImpulseResponse="iir",Steepness=.95)
+
+sound (filter, Fs)
+
+%create  .wav file for lowpass filter
+filename = './ece2312-filteredspeechsine.wav';
+audiowrite(filename,filter,Fs);
+
+%plot .wav file for lowpass filter
+stft(filter,Fs,Window = kaiser(256,5),OverlapLength=220, FFTLength =512);
+ylim([0 10]) %can play around with limits to highlight speech section
+
+% Stereo Fun
+
+scale = 10^(-6/10);
+
+L = oldWav; %original audio, left speaker
+R = combinedWave*scale; %%attenated by -6 db, right speaker
+
+sound (L, Fs)
+sound (R, Fs)
+
+filename = './ece2312-filteredspeechsine.wav';
+audiowrite(filename,cetkSineWave,Fs);
+
+%Spectrograms of audio channels
+stft(L,Fs,Window = kaiser(256,5),OverlapLength=220, FFTLength =512);
+ylim([0 10]) %can play around with limits to highlight speech section
+stft(R,Fs,Window = kaiser(256,5),OverlapLength=220, FFTLength =512);
+ylim([0 10]) %can play around with limits to highlight speech section
